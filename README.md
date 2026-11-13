@@ -1,4 +1,4 @@
-# 会员管理系统 2.1.1
+# 会员管理系统 2.1.2
 
 本地会员运营工具，包含工作台、会员管理、交易记录、报表、设置和课程规划入口。数据保存在当前浏览器 LocalStorage 中。
 
@@ -38,8 +38,12 @@ React 19、Ant Design 6、React Router 7、Zustand 5、Recharts 3、TypeScript 7
 
 升级后发现旧数据格式异常时，请导出原始数据保留现场，再导入合法备份；不要直接清理浏览器数据。历史流水保留原记录，新增消费显示“账户余额”和实际扣次，旧流水未记录次数时显示“未记录”。
 
-开发文档中的早期功能和版本描述属于历史记录；当前行为以本文和 docs/第二轮优化与发布报告.md 为准。
+开发文档中的早期功能和版本描述属于历史记录；当前行为以本文、TESTING.md 和 docs/第三轮测试优化说明.md 为准。
 
 ## GitHub发布
 
 推送main后自动运行测试、静态检查和构建，再发布dist。Pages配置和Docker启动见DEPLOYMENT.md。仓库保留源码，不提交编译产物。旧版本可从Git历史恢复。
+
+## 自动测试
+
+业务回归运行 `npm test`，真实 Chromium 测试运行 `npm run test:browser`（需 Python、Playwright 与已启动的生产预览）。环境准备、测试范围、截图和追踪说明见 TESTING.md。GitHub 会测试根路径与 Pages 子路径，两者通过后才部署。
