@@ -190,6 +190,12 @@ export function cancelSession(
   now = new Date().toISOString(),
 ): AppData {
   editable(data, id, now);
+  if (
+    data.appointments.some(
+      (a) => a.sessionId === id && a.status === "completed",
+    )
+  )
+    throw new Error("存在已完成的历史预约，不能取消整个课次");
   return finish({
     ...data,
     courseSessions: data.courseSessions.map((s) =>

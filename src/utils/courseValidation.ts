@@ -69,6 +69,8 @@ export function validateCourseData(d: AppData) {
     );
     check(courseTime(s.startsAt), "课次开始时间不合法");
     check(["scheduled", "cancelled"].includes(s.status), "课次状态不合法");
+  }
+  for (const s of d.courseSessions) {
     if (s.status === "scheduled") {
       const conflict = d.courseSessions.some(
         (other) =>
@@ -91,8 +93,9 @@ export function validateCourseData(d: AppData) {
       "预约关联课次不存在",
     );
     check(courses.has(a.courseId), "预约关联课程不存在");
-    const s = sessions.get(a.sessionId)!;
-    if (a.status === "cancelled") continue;
+  }
+  for (const a of active) {
+    const s = sessions.get(a.sessionId!)!;
     check(
       s.status === "scheduled" && s.courseId === a.courseId,
       "预约课次或课程关联不一致",

@@ -15,7 +15,7 @@ import {
 } from "../src/utils/courses.ts";
 
 const NOW = "2026-11-13T04:00:00Z";
-const START = "2026-11-14T04:00:00Z";
+const START = "2026-11-14T12:00:00Z";
 const member: Member = {
   id: "m1",
   name: "预约会员",
@@ -184,7 +184,7 @@ test("教练或场地冲突被拒绝，首尾相接允许", () => {
       () =>
         saveSession(
           d,
-          { ...s, ...patch, startsAt: "2026-11-14T04:30:00Z" },
+          { ...s, ...patch, startsAt: "2026-11-14T12:30:00Z" },
           undefined,
           NOW,
         ),
@@ -192,7 +192,7 @@ test("教练或场地冲突被拒绝，首尾相接允许", () => {
     );
   }
   assert.equal(
-    saveSession(d, { ...s, startsAt: "2026-11-14T05:00:00Z" }, undefined, NOW)
+    saveSession(d, { ...s, startsAt: "2026-11-14T13:00:00Z" }, undefined, NOW)
       .courseSessions.length,
     2,
   );
@@ -275,7 +275,7 @@ test("同会员撞课拒绝，不同教练场地和相邻课次允许", () => {
     d,
     {
       ...d.courseSessions[0],
-      startsAt: "2026-11-14T04:30:00Z",
+      startsAt: "2026-11-14T12:30:00Z",
       coach: "王教练",
       venue: "二号教室",
     },
@@ -288,7 +288,7 @@ test("同会员撞课拒绝，不同教练场地和相邻课次允许", () => {
   );
   d = saveSession(
     d,
-    { ...d.courseSessions[0], startsAt: "2026-11-14T05:00:00Z" },
+    { ...d.courseSessions[0], startsAt: "2026-11-14T13:00:00Z" },
     undefined,
     NOW,
   );
@@ -379,4 +379,39 @@ test("预约写入失败保留整个旧快照，成功后可备份恢复", () =>
   storage.importBackup(text);
   assert.equal(storage.readSnapshot().data.appointments.length, 1);
   assert.equal(storage.readSnapshot().data.courseSessions.length, 1);
+});
+
+test("本地午夜和深夜课程使用当地上课日校验会员有效期", () => {
+  for (const local of ["2026-11-14T00:30:00", "2026-11-14T23:30:00"]) {
+    let d = ready();
+    d = saveSession(
+      d,
+      { ...d.courseSessions[0], startsAt: new Date(local).toISOString() },
+      sid(d),
+      NOW,
+    );
+    d.members[0].expiryDate = "2026-11-13";
+    assert.throws(() => bookSession(d, sid(d), "m1", "", NOW), /上课日已过期/);
+    d.members[0].expiryDate = "2026-11-14";
+    assert.equal(bookSession(d, sid(d), "m1", "", NOW).appointments.length, 1);
+  }
+});
+
+test("课次取消不能改写已完成的历史预约", () => {
+  let d = ready();
+  d = bookSession(d, sid(d), "m1", "", NOW);
+  d.appointments[0].status = "completed";
+  assert.throws(() => cancelSession(d, sid(d), NOW), /已完成/);
+  assert.equal(d.appointments[0].status, "completed");
+});
+
+test("损坏预约关联先给出校验错误，不泄漏空引用异常", () => {
+  let d = ready();
+  d = bookSession(d, sid(d), "m1", "", NOW);
+  d.appointments.push({
+    ...d.appointments[0],
+    id: "bad",
+    sessionId: "missing",
+  });
+  assert.throws(() => validateData(d), /数据校验失败：预约关联课次不存在/);
 });
