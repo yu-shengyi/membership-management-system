@@ -253,7 +253,13 @@ class BrowserChecks(unittest.TestCase):
         self.assertEqual(len(self.snapshot()["members"]), 4)
 
     def test_responsive_pages_navigation_and_reload(self):
-        self.open()
+        data = fixture()
+        data["data"]["transactions"] = [{
+            "id":"responsive-transaction", "memberId":"m1", "memberName":"测试会员",
+            "type":"consume", "amount":1, "paymentMethod":"balance", "balanceBefore":11,
+            "balanceAfter":10, "operator":"测试操作员", "createdAt":"2026-11-13T04:00:00Z", "sessions":1,
+        }]
+        self.open(data=data)
         for width in [390, 820, 1440]:
             self.page.set_viewport_size({"width":width,"height":1000})
             for route, title in [("dashboard","工作台"),("members","会员管理"),("transactions","交易记录"),("reports","数据报表"),("courses","课程管理"),("settings","系统设置")]:
@@ -261,6 +267,12 @@ class BrowserChecks(unittest.TestCase):
                     self.goto(route)
                     expect(self.page.get_by_role("heading", name=title, exact=True)).to_be_visible()
                     self.assertTrue(self.page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"), "Page has horizontal overflow")
+                    if route == "reports":
+                        expect(self.page.locator(".recharts-surface")).to_have_count(2)
+                        expect(self.page.locator(".recharts-line-curve")).to_have_count(3)
+                        for chart in self.page.locator(".recharts-surface").all():
+                            box = chart.bounding_box();self.assertIsNotNone(box)
+                            self.assertGreater(box["width"], 0);self.assertGreater(box["height"], 0)
                     self.page.screenshot(path=str(ARTIFACTS / (str(width) + "-" + route + ".png")), full_page=True)
             self.goto("dashboard")
             if width < 992:
