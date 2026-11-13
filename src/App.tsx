@@ -87,7 +87,7 @@ function App() {
                 path="members/*"
                 element={error ? recovery : <Members />}
               />
-              <Route path="courses" element={<Courses />} />
+              <Route path="courses" element={error ? recovery : <Courses />} />
               <Route
                 path="transactions"
                 element={error ? recovery : <Transactions />}

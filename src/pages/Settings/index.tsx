@@ -63,10 +63,11 @@ export default function Settings() {
               <p>
                 会员 {b.data.members.length} 人 · 交易{" "}
                 {b.data.transactions.length} 笔 · 预约{" "}
-                {b.data.appointments.length} 条
+                {b.data.appointments.length} 条 · 课程 {b.data.courses.length}{" "}
+                门 · 课次 {b.data.courseSessions.length} 节
               </p>
               <p>
-                将完整替换当前数据。建议先导出当前备份；历史备份保留最近7次。
+                将完整替换当前数据，包括课程与排课。旧备份没有的课程也会被清空。建议先导出当前备份；历史备份保留最近7次。
               </p>
             </>
           ),
@@ -126,7 +127,7 @@ export default function Settings() {
           </Button>
         </Space>
         <p className="muted">
-          支持旧版 2.0.0 和新版 2.1.0
+          支持 2.0.0、2.1.0 和新版 2.2.0
           格式；格式、日期、金额和关联关系校验通过后才允许导入。
         </p>
       </Card>
@@ -167,7 +168,13 @@ export default function Settings() {
                   b.data.members.length +
                   " 人 · 交易 " +
                   b.data.transactions.length +
-                  " 笔"
+                  " 笔 · 课程 " +
+                  b.data.courses.length +
+                  " 门 · 课次 " +
+                  b.data.courseSessions.length +
+                  " 节 · 预约 " +
+                  b.data.appointments.length +
+                  " 条"
                 }
               />
             </List.Item>
@@ -232,7 +239,7 @@ export default function Settings() {
       </Card>
       <Card title="清空业务数据">
         <p>
-          会清空会员、交易和预约。请先导出备份；操作前的数据仍可从最近历史备份恢复。
+          会清空会员、交易、课程、课次和预约。请先导出备份；操作前的数据仍可从最近历史备份恢复。
         </p>
         <Button
           danger

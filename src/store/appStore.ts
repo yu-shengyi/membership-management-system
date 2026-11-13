@@ -1,6 +1,13 @@
 import { createId } from "../utils/id";
 import { create } from "zustand";
-import type { AppData, Member, TransactionInput } from "../types/index";
+import type {
+  AppData,
+  Member,
+  TransactionInput,
+  CourseInput,
+  SessionInput,
+} from "../types/index";
+import * as courseRules from "../utils/courses";
 import { storage } from "../utils/storage";
 import { createTransaction, updateMember, removeDemo } from "../utils/domain";
 import { dateKey, shiftDate } from "../utils/dates";
@@ -14,6 +21,11 @@ interface Store extends AppData {
   transact: (input: TransactionInput) => void;
   addDemo: () => void;
   clearDemo: () => void;
+  saveCourse: (input: CourseInput, id?: string) => void;
+  saveSession: (input: SessionInput, id?: string) => void;
+  bookSession: (sessionId: string, memberId: string, notes?: string) => void;
+  cancelAppointment: (id: string) => void;
+  cancelSession: (id: string) => void;
 }
 export const useAppStore = create<Store>((set) => {
   const publish = (data: AppData) => {
@@ -29,6 +41,15 @@ export const useAppStore = create<Store>((set) => {
     courseSessions: [],
     error: null,
     warning: null,
+    saveCourse: (input, id) =>
+      publish(courseRules.saveCourse(current(), input, id)),
+    saveSession: (input, id) =>
+      publish(courseRules.saveSession(current(), input, id)),
+    bookSession: (id, memberId, notes) =>
+      publish(courseRules.bookSession(current(), id, memberId, notes)),
+    cancelAppointment: (id) =>
+      publish(courseRules.cancelAppointment(current(), id)),
+    cancelSession: (id) => publish(courseRules.cancelSession(current(), id)),
     load: () => {
       try {
         set({ ...current(), error: null, warning: storage.getBackupWarning() });

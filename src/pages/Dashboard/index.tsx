@@ -4,11 +4,16 @@ import { useAppStore } from "@/store/appStore";
 import { getMemberStatus } from "@/utils/domain";
 import { dateKey, shiftDate } from "@/utils/dates";
 import { TRANSACTION_TYPE_NAMES } from "@/types";
+import { getOccupancy } from "@/utils/courses";
 export default function Dashboard() {
-  const { members, transactions } = useAppStore();
+  const state = useAppStore();
+  const { members, transactions, courseSessions } = state;
   const nav = useNavigate();
   const current = members.filter((m) => !m.archived);
   const today = dateKey();
+  const todaySessions = courseSessions
+    .filter((s) => s.status === "scheduled" && dateKey(s.startsAt) === today)
+    .sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt));
   const due = current.filter(
     (m) =>
       getMemberStatus(m) === "active" &&
@@ -82,6 +87,41 @@ export default function Dashboard() {
           </Col>
         ))}
       </Row>
+      <Card
+        title="今日课程"
+        extra={<Link to="/courses">查看排课</Link>}
+        style={{ marginBottom: 24 }}
+      >
+        <p className="muted small">
+          {todaySessions.length} 节课程 ·{" "}
+          {todaySessions.reduce((n, s) => n + getOccupancy(state, s.id), 0)}{" "}
+          人次有效预约 · 预约不扣费
+        </p>
+        {todaySessions.length ? (
+          todaySessions.map((s) => (
+            <div className="todo-row" key={s.id}>
+              <div>
+                <strong>{s.courseName}</strong>
+                <p className="muted">
+                  {new Date(s.startsAt).toLocaleTimeString("zh-CN", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}{" "}
+                  · {s.coach} · {s.venue}
+                </p>
+              </div>
+              <Link to={`/courses?session=${encodeURIComponent(s.id)}`}>
+                {getOccupancy(state, s.id)} / {s.capacity} 人 →
+              </Link>
+            </div>
+          ))
+        ) : (
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description="今天暂无课程，可前往课程管理安排排课。"
+          />
+        )}
+      </Card>
       <Row gutter={[20, 20]}>
         <Col xs={24} xl={16}>
           <Card
