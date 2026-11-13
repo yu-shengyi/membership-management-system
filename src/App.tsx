@@ -7,7 +7,7 @@ import {
   Navigate,
   Link,
 } from "react-router-dom";
-import { ConfigProvider, Alert, Button, Space, Spin } from "antd";
+import { ConfigProvider, Alert, Button, Space, Spin, message } from "antd";
 import zhCN from "antd/locale/zh_CN";
 import Layout from "./components/Layout/Layout";
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -37,7 +37,17 @@ function App() {
         <>
           <p>{error}</p>
           <Space wrap>
-            <Button onClick={() => storage.downloadRaw()}>导出原始数据</Button>
+            <Button
+              onClick={() => {
+                try {
+                  storage.downloadRaw();
+                } catch (e) {
+                  message.error((e as Error).message);
+                }
+              }}
+            >
+              导出原始数据
+            </Button>
             <Link to="/settings">前往设置导入有效备份</Link>
             <Button onClick={load}>重新读取</Button>
           </Space>

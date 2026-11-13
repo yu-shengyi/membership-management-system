@@ -24,7 +24,13 @@ export default function Settings() {
   } catch (e) {
     historyError = (e as Error).message;
   }
-  const info = storage.getStorageInfo();
+  let info: ReturnType<typeof storage.getStorageInfo> | undefined;
+  let storageError = "";
+  try {
+    info = storage.getStorageInfo();
+  } catch (e) {
+    storageError = (e as Error).message;
+  }
   const act = (fn: () => unknown) => {
     try {
       fn();
@@ -99,7 +105,15 @@ export default function Settings() {
           >
             <Button>导入备份（先预览）</Button>
           </Upload>
-          <Button onClick={() => storage.downloadRaw()}>
+          <Button
+            onClick={() => {
+              try {
+                storage.downloadRaw();
+              } catch (e) {
+                message.error((e as Error).message);
+              }
+            }}
+          >
             导出原始数据（故障恢复）
           </Button>
         </Space>
@@ -153,18 +167,29 @@ export default function Settings() {
         />
       </Card>
       <Card title="存储空间（估计）" style={{ marginBottom: 20 }}>
-        <p>{info.totalSizeMB} MB / 约5 MB，实际限额由浏览器决定</p>
-        <Progress percent={Math.min(100, Number(info.usage))} />
-        <List
-          size="small"
-          dataSource={Object.entries(info.details)}
-          renderItem={([key, value]) => (
-            <List.Item>
-              <span>{key}</span>
-              <span>{(value / 1024).toFixed(2)} KB</span>
-            </List.Item>
-          )}
-        />
+        {info ? (
+          <>
+            <p>{info.totalSizeMB} MB / 约5 MB，实际限额由浏览器决定</p>
+            <Progress percent={Math.min(100, Number(info.usage))} />
+            <List
+              size="small"
+              dataSource={Object.entries(info.details)}
+              renderItem={([key, value]) => (
+                <List.Item>
+                  <span>{key}</span>
+                  <span>{(value / 1024).toFixed(2)} KB</span>
+                </List.Item>
+              )}
+            />
+          </>
+        ) : (
+          <Alert
+            type="error"
+            showIcon
+            title="无法读取存储空间"
+            description={storageError}
+          />
+        )}
       </Card>
       <Card title="演示数据" style={{ marginBottom: 20 }}>
         <p className="muted">

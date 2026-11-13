@@ -183,6 +183,8 @@ class BrowserChecks(unittest.TestCase):
         self.goto("settings")
         expect(self.page.get_by_role("heading", name="系统设置", exact=True)).to_be_visible()
         expect(self.page.get_by_text("无法读取本地业务数据，已停止业务操作", exact=True)).to_be_visible()
+        self.page.get_by_role("button", name="导出原始数据（故障恢复）", exact=True).click()
+        expect(self.page.locator(".ant-message-notice").get_by_text("浏览器禁止本地存储", exact=True)).to_be_visible()
 
     def test_demo_edit_and_mobile_form(self):
         self.open("settings")
@@ -226,5 +228,18 @@ class BrowserChecks(unittest.TestCase):
             self.page.reload();self.page.wait_for_load_state("networkidle")
             expect(self.page.get_by_role("heading", name="会员管理", exact=True)).to_be_visible()
 
+class ReportingResult(unittest.TextTestResult):
+    def report(self, test, err):
+        if os.getenv("GITHUB_ACTIONS"):
+            detail = self._exc_info_to_string(err, test).replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+            print("::error title=" + str(test).replace(",", "%2C") + "::" + detail, flush=True)
+    def addFailure(self, test, err):
+        super().addFailure(test, err);self.report(test, err)
+    def addError(self, test, err):
+        super().addError(test, err);self.report(test, err)
+    def addSubTest(self, test, subtest, err):
+        super().addSubTest(test, subtest, err)
+        if err is not None: self.report(subtest, err)
+
 if __name__ == "__main__":
-    unittest.main(verbosity=2)
+    unittest.main(verbosity=2, testRunner=unittest.TextTestRunner(verbosity=2, resultclass=ReportingResult))
