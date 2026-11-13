@@ -47,9 +47,9 @@ export function validateData(value: unknown): asserts value is AppData {
     check(["active", "expired", "frozen"].includes(m.status), "未知会员状态");
     check(money(m.balance), "余额必须为非负金额，最多两位小数");
     check(
-      Number.isInteger(m.points) &&
+      Number.isSafeInteger(m.points) &&
         m.points >= 0 &&
-        Number.isInteger(m.remainingSessions) &&
+        Number.isSafeInteger(m.remainingSessions) &&
         m.remainingSessions >= 0,
       "积分和次数必须为非负整数",
     );
@@ -103,12 +103,12 @@ export function validateData(value: unknown): asserts value is AppData {
     );
     check(
       t.sessions === undefined ||
-        (Number.isInteger(t.sessions) && t.sessions > 0),
+        (Number.isSafeInteger(t.sessions) && t.sessions > 0),
       "交易次数必须为正整数",
     );
     for (const key of ["pointsUsed", "pointsEarned"] as const)
       check(
-        t[key] === undefined || (Number.isInteger(t[key]) && t[key]! >= 0),
+        t[key] === undefined || (Number.isSafeInteger(t[key]) && t[key]! >= 0),
         "交易积分不合法",
       );
     check(

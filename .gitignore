@@ -30,3 +30,8 @@ outputs/
 .env
 .env.*
 !.env.example
+
+# Test artifacts
+test-results/
+__pycache__/
+*.pyc

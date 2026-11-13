@@ -119,6 +119,8 @@ export function updateMember(
             balance: x.balance,
             points: x.points,
             remainingSessions: x.remainingSessions,
+            cardType: x.cardType,
+            lastVisitDate: x.lastVisitDate,
             archived: x.archived,
             isDemo: x.isDemo,
             updatedAt: new Date().toISOString(),
