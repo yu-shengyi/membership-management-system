@@ -224,6 +224,9 @@ class BrowserChecks(unittest.TestCase):
         self.page.evaluate("payload => localStorage.setItem(payload.key, JSON.stringify(payload.backup))", {
             "key": KEY, "backup": {"version": "2.2.0", "id": "today", "timestamp": "2026-11-13T04:00:00Z", "data": data}})
         self.goto("dashboard")
+        # Hash navigation keeps the current document/store alive. Reload after
+        # direct fixture writes so both deployment modes read the same snapshot.
+        self.page.reload(); self.page.wait_for_load_state("networkidle")
         expect(self.page.get_by_text("瑜伽基础", exact=True)).to_be_visible()
         self.page.get_by_role("link", name="1 / 1 人 →", exact=True).click()
         expect(self.page.get_by_role("dialog", name="课次与预约", exact=True)).to_be_visible()
