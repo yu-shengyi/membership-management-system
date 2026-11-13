@@ -133,7 +133,7 @@ class BrowserChecks(unittest.TestCase):
 
     def test_search_and_archive_restore(self):
         self.open("members")
-        search = self.page.get_by_role("textbox", name="搜索会员")
+        search = self.page.get_by_label("搜索会员", exact=True)
         search.press_sequentially("冻结会员", delay=50)
         expect(self.page.locator("tr[data-row-key]")).to_have_count(1)
         expect(self.page.locator("tr[data-row-key]")).to_contain_text("冻结会员")
@@ -159,6 +159,7 @@ class BrowserChecks(unittest.TestCase):
         dialog = self.page.get_by_role("dialog", name="确认导入备份")
         expect(dialog).to_be_visible();self.assertEqual(self.snapshot()["members"][0]["name"], "测试会员")
         dialog.get_by_role("button", name=re.compile("取.*消")).click()
+        expect(dialog).to_have_count(0)
         self.assertEqual(self.snapshot()["members"][0]["name"], "测试会员")
         self.page.locator('input[type="file"]').set_input_files({"name":"confirmed.json", "mimeType":"application/json", "buffer":json.dumps(backup).encode()})
         self.page.get_by_role("dialog", name="确认导入备份").get_by_role("button", name="确认导入", exact=True).click()
@@ -167,6 +168,49 @@ class BrowserChecks(unittest.TestCase):
         self.page.locator('input[type="file"]').set_input_files({"name":"broken.json", "mimeType":"application/json", "buffer":b'{"version":"99.0.0"}'})
         expect(self.page.get_by_text("导入失败", exact=False)).to_be_visible()
         self.assertEqual(self.snapshot()["members"][0]["name"], "导入预览会员")
+
+    def test_import_storage_failure_can_retry(self):
+        self.open("settings")
+        backup = fixture();backup["data"]["members"][0]["name"] = "重试导入会员"
+        self.page.locator('input[type="file"]').set_input_files({"name":"retry.json", "mimeType":"application/json", "buffer":json.dumps(backup).encode()})
+        dialog = self.page.get_by_role("dialog", name="确认导入备份")
+        expect(dialog).to_be_visible()
+        self.page.evaluate("""key => {
+            window.originalStorageWrite = Storage.prototype.setItem;
+            Storage.prototype.setItem = function(k,v) {
+                if (k === key) throw new DOMException('测试空间不足', 'QuotaExceededError');
+                return window.originalStorageWrite.call(this,k,v);
+            };
+        }""", KEY)
+        dialog.get_by_role("button", name="确认导入", exact=True).click()
+        expect(self.page.get_by_text("测试空间不足", exact=False)).to_be_visible()
+        expect(dialog).to_be_visible()
+        self.assertEqual(self.snapshot()["members"][0]["name"], "测试会员")
+        self.page.evaluate("Storage.prototype.setItem = window.originalStorageWrite")
+        dialog.get_by_role("button", name="确认导入", exact=True).click()
+        expect(dialog).to_have_count(0)
+        self.assertEqual(self.snapshot()["members"][0]["name"], "重试导入会员")
+
+    def test_archive_storage_failure_can_retry(self):
+        self.open("members")
+        self.page.locator('tr[data-row-key="m1"]').get_by_role("button", name=re.compile("归.*档")).click()
+        dialog = self.page.get_by_role("dialog", name="归档会员？")
+        expect(dialog).to_be_visible()
+        self.page.evaluate("""key => {
+            window.originalStorageWrite = Storage.prototype.setItem;
+            Storage.prototype.setItem = function(k,v) {
+                if (k === key) throw new DOMException('测试空间不足', 'QuotaExceededError');
+                return window.originalStorageWrite.call(this,k,v);
+            };
+        }""", KEY)
+        dialog.get_by_role("button", name=re.compile("确.*定")).click()
+        expect(self.page.get_by_text("测试空间不足", exact=False)).to_be_visible()
+        expect(dialog).to_be_visible()
+        self.assertFalse(self.snapshot()["members"][0].get("archived", False))
+        self.page.evaluate("Storage.prototype.setItem = window.originalStorageWrite")
+        dialog.get_by_role("button", name=re.compile("确.*定")).click()
+        expect(dialog).to_have_count(0)
+        self.assertTrue(self.snapshot()["members"][0]["archived"])
 
     def test_corrupt_data_recovery_screen(self):
         self.open("settings", data="corrupt snapshot")

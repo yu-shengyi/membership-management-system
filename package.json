@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "node --experimental-strip-types --test --test-isolation=none tests/*.test.ts"
+    "test": "node --experimental-strip-types --test --test-isolation=none tests/*.test.ts",
+    "test:browser": "python tests/browser/test_app.py"
   },
   "dependencies": {
     "@ant-design/icons": "^6.3.4",

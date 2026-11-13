@@ -136,13 +136,14 @@ export default function MemberList() {
                 content: "保留资料与全部交易历史，归档会员不可交易。",
                 okText: "确定",
                 cancelText: "取消",
-                onOk: () => {
+                onOk: (close: () => void) => {
                   try {
                     archiveMember(m.id, !m.archived);
                     message.success("已更新");
+                    close();
                   } catch (e) {
                     message.error((e as Error).message);
-                    throw e;
+                    // Keep confirmation available for retry.
                   }
                 },
               })

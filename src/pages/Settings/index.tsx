@@ -42,6 +42,14 @@ export default function Settings() {
       throw e;
     }
   };
+  const confirmAction = (fn: () => unknown) => (close: () => void) => {
+    try {
+      act(fn);
+      close();
+    } catch {
+      // Keep the dialog open and allow retry after the reported storage error.
+    }
+  };
   const importFile = (file: File) => {
     file
       .text()
@@ -64,7 +72,7 @@ export default function Settings() {
           ),
           okText: "确认导入",
           cancelText: "取消",
-          onOk: () => act(() => storage.importBackup(text)),
+          onOk: confirmAction(() => storage.importBackup(text)),
         });
       })
       .catch((e) => message.error("导入失败：" + e.message));
@@ -139,7 +147,7 @@ export default function Settings() {
                       content: "将完整替换当前数据，请先导出当前备份。",
                       okText: "恢复",
                       cancelText: "取消",
-                      onOk: () => act(() => storage.restoreBackup(b.id)),
+                      onOk: confirmAction(() => storage.restoreBackup(b.id)),
                     })
                   }
                 >
@@ -214,7 +222,7 @@ export default function Settings() {
                 content: "演示会员的交易与预约也会被移除，真实会员保留。",
                 okText: "清理",
                 cancelText: "取消",
-                onOk: () => act(clearDemo),
+                onOk: confirmAction(clearDemo),
               })
             }
           >
@@ -235,7 +243,7 @@ export default function Settings() {
               okText: "确认清空",
               cancelText: "取消",
               okType: "danger",
-              onOk: () => act(() => storage.clearAll()),
+              onOk: confirmAction(() => storage.clearAll()),
             })
           }
         >
