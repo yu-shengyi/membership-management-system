@@ -1,218 +1,45 @@
-# 会员管理系统 (Membership Management System)
+# 会员管理系统 2.1.1
 
-<div align="center">
+本地会员运营工具，包含工作台、会员管理、交易记录、报表、设置和课程规划入口。数据保存在当前浏览器 LocalStorage 中。
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/version-1.0.0-green.svg)
-![Status](https://img.shields.io/badge/status-stable-brightgreen.svg)
+## 开发与验证
 
-一个功能完善的健身/运动场馆会员管理系统，基于现代化前端技术构建
+使用 Node.js 22.18+ 或 24（本次使用 24.18.0）。在项目目录运行：
 
-</div>
+    npm ci
+    npm run dev
+    npm test
+    npm run lint
+    npm run build
+    npm run preview
 
-## ✨ 功能特性
+开发地址默认 http://localhost:5173，预览默认 http://localhost:4173。生产部署使用 dist 目录，并配置所有页面路径回退到 index.html。请通过 Web 服务访问，不直接双击 HTML。
 
-### 核心功能
-- 📋 **会员信息管理** - 增删改查、照片上传、积分管理
-- 💳 **多种卡种支持** - 次数卡、日卡、月卡、季卡等灵活配置
-- 💰 **交易记录管理** - 消费/充值记录追踪
-- 🏆 **积分系统** - 自动积分累计和等级升降
-- 👨‍🏫 **教练管理** - 教练人员信息维护
-- 📚 **私教课管理** - 项目管理与消课记录
-- 📊 **数据仪表盘** - 可视化数据分析
-- 💾 **数据导入/导出** - 支持数据备份和迁移
+## 当前功能
 
-### 技术特点
-- 🚀 基于 React + Ant Design 构建
-- 💾 使用 LocalStorage 本地存储数据
-- 📱 响应式设计，支持移动端访问
-- 🎨 现代化 UI 设计，用户体验优秀
-- ⚡ 无需后端，开箱即用
+- 工作台显示在册/正常会员、当前余额、今日消费、临近到期与低次数待办。
+- 会员按姓名/手机/编号/卡号、状态、卡类型、归档筛选，支持归档和恢复。
+- 新会员可录入初始余额、积分和次数；编辑时账户数值只读。卡类型编辑锁定，避免将次数资产切换隐藏。
+- 充值通过外部收款方式增加余额；消费从余额扣款，可为次数卡同时扣除次数。每笔操作统一保存账户和流水。
+- 消费拒绝过期、冻结、归档、未生效卡、余额不足与次数不足。到期日当天仍有效。手动标记过期也会阻止消费，续期时需将状态改回正常。
+- 充值、消费、退款历史分别统计；当前余额与卡类型分布属于当前快照，不代表历史营收。
+- 备份导入先校验和预览，支持 2.0.0 / 2.1.0；自动备份保留最近7次，按稳定编号恢复。
+- 旧数据迁移后保留原始键；数据损坏时显示恢复入口，不自动清空。故障恢复的原始导出用于保全数据，不是普通导入格式。
+- 演示会员带独立标记，清理仅影响演示会员及其关联记录。
+- 课程排课与预约尚未实现，页面明确标示未开放。
 
-## 📸 系统截图
+## 技术栈
 
-*(建议添加系统截图展示主要功能界面)*
+React 19、Ant Design 6、React Router 7、Zustand 5、Recharts 3、TypeScript 7、Vite 8。具体版本以 package-lock.json 为准。各页面按需加载。
 
-## 🚀 快速开始
+## 数据与使用边界
 
-### 系统要求
+请定期在设置中导出完整备份。浏览器数据不会自动跨设备同步，尚无后端、员工登录权限或多门店支持。多个标签页会同步已提交数据，但同时写入仍可能发生覆盖；当前版本适合单操作员使用。
 
-- **操作系统**: Windows / macOS / Linux
-- **浏览器**: Chrome / Edge / Firefox / Safari (现代浏览器)
-- **运行环境**: Python 3（必需）
+升级后发现旧数据格式异常时，请导出原始数据保留现场，再导入合法备份；不要直接清理浏览器数据。历史流水保留原记录，新增消费显示“账户余额”和实际扣次，旧流水未记录次数时显示“未记录”。
 
-### 安装步骤
+开发文档中的早期功能和版本描述属于历史记录；当前行为以本文和 docs/第二轮优化与发布报告.md 为准。
 
-#### 1. 安装 Python（如果还没有）
+## GitHub发布
 
-**Windows:**
-1. 访问 https://www.python.org/downloads/
-2. 下载并运行安装程序
-3. ⚠️ **重要：勾选 "Add Python to PATH"**
-4. 点击 "Install Now"
-
-**Mac:**
-```bash
-brew install python3
-```
-
-**Linux:**
-```bash
-sudo apt install python3  # Ubuntu/Debian
-sudo yum install python3  # CentOS/RHEL
-```
-
-#### 2. 启动系统
-
-**Windows 用户**
-- 双击 `启动.bat` 文件
-
-**Mac / Linux 用户**
-```bash
-bash start.sh
-```
-
-#### 3. 访问系统
-
-看到 "Serving HTTP on..." 信息后，打开浏览器访问:
-```
-http://localhost:8080
-```
-
-#### 4. 导入示例数据（推荐）
-
-首次使用建议导入示例数据：
-1. 进入系统后点击"设置"或"数据管理"
-2. 点击"数据导入"
-3. 选择项目中的 `demo-data.json` 文件
-4. 系统会自动导入示例会员、教练、课程数据
-
-## 📖 使用说明
-
-### ⚠️ 重要提示
-
-1. **必须使用 HTTP 服务器运行**
-   - 不能直接双击 `index.html` 文件
-   - 原因: 浏览器安全策略不允许 `file://` 协议加载 ES 模块
-
-2. **数据存储说明**
-   - 所有数据保存在浏览器的 LocalStorage 中
-   - 不同浏览器/电脑的数据是独立的
-   - 清除浏览器缓存会导致数据丢失
-
-3. **数据备份建议**
-   - 定期使用系统内的"数据导出"功能备份数据
-   - 路径: 设置 → 数据导出 → 下载 JSON 备份文件
-   - 将备份文件保存到安全位置
-
-4. **数据恢复**
-   - 使用"数据导入"功能可恢复之前导出的数据
-   - 在新电脑/浏览器上可以通过此方式迁移数据
-
-### 基本操作流程
-
-1. **添加会员**: 会员管理 → 新增会员 → 填写信息 → 保存
-2. **办理卡种**: 在会员详情页选择卡种类型 → 充值
-3. **消费记录**: 会员列表 → 选择会员 → 记录消费
-4. **查看统计**: 访问仪表盘查看整体运营数据
-5. **数据备份**: 设置 → 数据管理 → 导出数据
-
-## 📁 项目结构
-
-```
-会员管理系统/
-├── index.html              # 主页面
-├── favicon.svg             # 网站图标
-├── icons.svg               # SVG 图标集
-├── 启动.bat                # Windows 启动脚本（一键启动）
-├── start.sh                # Mac/Linux 启动脚本
-│
-├── assets/                 # 打包后的资源文件
-│   ├── index-*.js         # JavaScript bundle
-│   └── index-*.css        # CSS bundle
-│
-├── .github/                # GitHub 配置
-│   └── workflows/
-│       └── deploy.yml     # 自动部署到 GitHub Pages
-│
-├── scripts/                # 工具脚本
-│   ├── init-git.bat       # Windows Git 初始化
-│   └── init-git.sh        # Linux/Mac Git 初始化
-│
-├── 📚 文档
-├── README.md              # 项目说明（你正在看的）
-├── DEPLOYMENT.md          # 部署指南
-├── FAQ.md                 # 常见问题
-├── CONTRIBUTING.md        # 贡献指南
-├── CHANGELOG.md           # 更新日志
-├── ROADMAP.md             # 项目路线图
-│
-├── 📦 配置文件
-├── .gitignore             # Git 忽略规则
-├── LICENSE                # MIT 许可证
-├── Dockerfile             # Docker 配置
-├── docker-compose.yml     # Docker Compose
-└── demo-data.json         # 示例数据
-```
-
-## 🛠️ 技术栈
-
-- **前端框架**: React 18
-- **UI 组件库**: Ant Design
-- **构建工具**: Vite
-- **状态管理**: LocalStorage
-- **图表库**: Ant Design Charts
-
-## 🔧 开发说明
-
-此项目当前提供的是构建后的生产版本。如果需要开发版本:
-
-1. 源代码需要包含 `src/` 目录和构建配置文件
-2. 使用 Vite 作为开发服务器
-3. 运行 `npm install` 安装依赖
-4. 运行 `npm run dev` 启动开发服务器
-5. 运行 `npm run build` 构建生产版本
-
-## 📝 更新日志
-
-### v1.0.0 (2024-07-07)
-- ✅ 初始版本发布
-- ✅ 完整的会员管理功能
-- ✅ 多种卡种支持
-- ✅ 数据导入导出
-- ✅ 仪表盘统计
-
-## 🤝 贡献指南
-
-欢迎贡献代码! 请遵循以下步骤:
-
-1. Fork 本仓库
-2. 创建新的特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 开启 Pull Request
-
-## 📄 许可证
-
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
-
-## 💬 联系方式
-
-如有问题或建议，请通过以下方式联系:
-
-- 提交 Issue: [GitHub Issues](https://github.com/yourusername/membership-management-system/issues)
-- Email: your.email@example.com
-
-## 🙏 致谢
-
-感谢以下开源项目:
-
-- [React](https://reactjs.org/)
-- [Ant Design](https://ant.design/)
-- [Vite](https://vitejs.dev/)
-
----
-
-<div align="center">
-Made with ❤️ by Your Name
-</div>
+推送main后自动运行测试、静态检查和构建，再发布dist。Pages配置和Docker启动见DEPLOYMENT.md。仓库保留源码，不提交编译产物。旧版本可从Git历史恢复。

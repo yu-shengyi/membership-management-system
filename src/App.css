@@ -1,0 +1,76 @@
+h1 {
+  font-size: 27px;
+  letter-spacing: -0.5px;
+  margin: 6px 0;
+  line-height: 1.35;
+  color: #253047;
+}
+p {
+  line-height: 1.65;
+}
+.page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.page-heading p {
+  color: #768096;
+  margin: 6px 0 0;
+}
+.eyebrow {
+  color: #81709e;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+.muted {
+  color: #7c8497;
+}
+.small {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.metric-row {
+  margin-bottom: 24px;
+}
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.todo-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid #f0edf5;
+}
+.todo-row p {
+  margin: 4px 0;
+}
+.member-form {
+  margin-top: 16px;
+}
+@media (max-width: 575px) {
+  h1 {
+    font-size: 24px;
+  }
+  .filter-bar > * {
+    width: 100% !important;
+    min-width: 0;
+  }
+  .page-heading {
+    gap: 14px;
+  }
+  .ant-modal {
+    max-width: calc(100vw - 24px);
+  }
+  .ant-card .ant-card-body {
+    padding: 18px;
+  }
+}
