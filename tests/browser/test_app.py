@@ -268,9 +268,9 @@ class BrowserChecks(unittest.TestCase):
                     expect(self.page.get_by_role("heading", name=title, exact=True)).to_be_visible()
                     self.assertTrue(self.page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"), "Page has horizontal overflow")
                     if route == "reports":
-                        expect(self.page.locator(".recharts-surface")).to_have_count(2)
+                        expect(self.page.locator(".recharts-wrapper > svg.recharts-surface")).to_have_count(2)
                         expect(self.page.locator(".recharts-line-curve")).to_have_count(3)
-                        for chart in self.page.locator(".recharts-surface").all():
+                        for chart in self.page.locator(".recharts-wrapper > svg.recharts-surface").all():
                             box = chart.bounding_box();self.assertIsNotNone(box)
                             self.assertGreater(box["width"], 0);self.assertGreater(box["height"], 0)
                     self.page.screenshot(path=str(ARTIFACTS / (str(width) + "-" + route + ".png")), full_page=True)
