@@ -24,6 +24,8 @@ const data = (): AppData => ({
   members: [{ ...member }],
   transactions: [],
   appointments: [],
+  courses: [],
+  courseSessions: [],
 });
 test("编辑资料不能切换卡类型而隐藏已有次数", () => {
   const result = updateMember(data(), member.id, {

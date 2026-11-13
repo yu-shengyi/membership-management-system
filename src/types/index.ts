@@ -90,6 +90,7 @@ export const PAYMENT_METHOD_NAMES: Record<PaymentMethod, string> = {
 // 预约相关类型
 export interface Appointment {
   id: string;
+  sessionId?: string;
   memberId: string;
   memberName: string;
   courseId: string;
@@ -117,7 +118,37 @@ export interface AppData {
   members: Member[];
   transactions: Transaction[];
   appointments: Appointment[];
+  courses: Course[];
+  courseSessions: CourseSession[];
 }
+export interface Course {
+  id: string;
+  name: string;
+  notes?: string;
+  duration: number;
+  capacity: number;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+export type CourseInput = Omit<Course, "id" | "createdAt" | "updatedAt">;
+export interface CourseSession {
+  id: string;
+  courseId: string;
+  courseName: string;
+  startsAt: string;
+  duration: number;
+  capacity: number;
+  coach: string;
+  venue: string;
+  status: "scheduled" | "cancelled";
+  createdAt: string;
+  updatedAt: string;
+}
+export type SessionInput = Pick<
+  CourseSession,
+  "courseId" | "startsAt" | "duration" | "capacity" | "coach" | "venue"
+>;
 export interface Backup {
   id: string;
   version: string;

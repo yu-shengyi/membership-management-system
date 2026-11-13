@@ -86,6 +86,107 @@ class BrowserChecks(unittest.TestCase):
     def snapshot(self):
         return self.page.evaluate("key => JSON.parse(localStorage.getItem(key))", KEY)["data"]
 
+    def create_course_session(self):
+        self.page.get_by_role("button", name="新增课程", exact=True).click()
+        dialog = self.page.get_by_role("dialog", name="新增课程", exact=True)
+        dialog.get_by_label("课程名称", exact=True).fill("瑜伽基础")
+        dialog.get_by_label("默认名额", exact=True).fill("1")
+        dialog.get_by_role("button", name="保存课程", exact=True).click()
+        expect(dialog).not_to_be_visible()
+        self.page.get_by_role("button", name="新增排课", exact=True).click()
+        dialog = self.page.get_by_role("dialog", name="新增排课", exact=True)
+        dialog.get_by_label("选择课程", exact=True).click()
+        self.page.locator(".ant-select-item-option-content").filter(has_text="瑜伽基础").click()
+        dialog.get_by_label("开始时间", exact=True).fill("2026-11-14T12:00")
+        dialog.get_by_label("教练", exact=True).fill("林教练")
+        dialog.get_by_label("场地", exact=True).fill("一号教室")
+        dialog.get_by_role("button", name="保存排课", exact=True).click()
+        expect(dialog).not_to_be_visible()
+        self.page.get_by_role("button", name="查看预约", exact=True).click()
+        return self.page.get_by_role("dialog", name="课次与预约", exact=True)
+
+    def choose_booking_member(self, dialog, name="测试会员"):
+        dialog.get_by_label("预约会员", exact=True).click()
+        self.page.locator(".ant-select-item-option-content").filter(has_text=name).click()
+
+    def test_course_booking_cancel_rebook_and_assets_unchanged(self):
+        self.open("courses")
+        before = self.snapshot()
+        dialog = self.create_course_session()
+        self.choose_booking_member(dialog)
+        dialog.get_by_role("button", name="确认预约", exact=True).dblclick()
+        expect(dialog.get_by_text("1 / 1", exact=True)).to_be_visible()
+        data = self.snapshot()
+        self.assertEqual(len(data["appointments"]), 1)
+        self.assertEqual(data["members"], before["members"])
+        self.assertEqual(data["transactions"], [])
+        dialog.get_by_role("button", name="取消预约", exact=True).click()
+        confirm = self.page.get_by_role("dialog", name="取消这条预约？", exact=True)
+        confirm.get_by_role("button", name="确认取消", exact=True).click()
+        expect(confirm).not_to_be_visible()
+        self.choose_booking_member(dialog)
+        dialog.get_by_role("button", name="确认预约", exact=True).click()
+        expect(dialog.get_by_text("1 / 1", exact=True)).to_be_visible()
+        self.assertEqual(len(self.snapshot()["appointments"]), 2)
+        self.page.reload(); self.page.wait_for_load_state("networkidle")
+        self.assertEqual(len(self.snapshot()["courseSessions"]), 1)
+        expect(self.page.get_by_role("dialog", name="课次与预约", exact=True)).to_be_visible()
+
+    def test_course_booking_storage_failure_can_retry(self):
+        self.open("courses")
+        dialog = self.create_course_session()
+        self.choose_booking_member(dialog)
+        self.page.evaluate("""key => {
+            window.originalStorageWrite = Storage.prototype.setItem;
+            Storage.prototype.setItem = function(k,v) {
+                if (k === key) throw new DOMException('测试空间不足', 'QuotaExceededError');
+                return window.originalStorageWrite.call(this,k,v);
+            };
+        }""", KEY)
+        dialog.get_by_role("button", name="确认预约", exact=True).click()
+        expect(self.page.get_by_text("测试空间不足", exact=False)).to_be_visible()
+        self.assertEqual(len(self.snapshot()["appointments"]), 0)
+        self.page.evaluate("() => { Storage.prototype.setItem = window.originalStorageWrite; }")
+        dialog.get_by_role("button", name="确认预约", exact=True).click()
+        expect(dialog.get_by_text("1 / 1", exact=True)).to_be_visible()
+        self.assertEqual(len(self.snapshot()["appointments"]), 1)
+
+    def test_course_eligibility_full_capacity_and_mobile(self):
+        payload = fixture()
+        payload["data"]["members"].append(member("m3", "第二会员", "13700000001"))
+        self.open("courses", payload)
+        self.page.set_viewport_size({"width": 390, "height": 844})
+        dialog = self.create_course_session()
+        self.choose_booking_member(dialog, "冻结会员")
+        expect(dialog.get_by_text("会员已冻结或标记过期", exact=True)).to_be_visible()
+        expect(dialog.get_by_role("button", name="确认预约", exact=True)).to_be_disabled()
+        self.choose_booking_member(dialog)
+        dialog.get_by_role("button", name="确认预约", exact=True).click()
+        self.choose_booking_member(dialog, "第二会员")
+        expect(dialog.get_by_text("课次名额已满", exact=True)).to_be_visible()
+        expect(dialog.get_by_role("button", name="确认预约", exact=True)).to_be_disabled()
+        self.assertEqual(len(self.snapshot()["appointments"]), 1)
+        self.assertTrue(self.page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"))
+
+    def test_course_dashboard_backup_and_demo_cleanup(self):
+        self.open("courses")
+        dialog = self.create_course_session()
+        self.choose_booking_member(dialog)
+        dialog.get_by_role("button", name="确认预约", exact=True).click()
+        self.goto("settings")
+        self.page.get_by_role("button", name="添加演示数据", exact=True).click()
+        self.page.get_by_role("button", name="清理演示数据", exact=True).click()
+        confirm = self.page.get_by_role("dialog", name="清理演示数据？")
+        confirm.get_by_role("button", name="清理", exact=True).click()
+        expect(confirm).not_to_be_visible()
+        self.assertEqual(len(self.snapshot()["courses"]), 1)
+        self.assertEqual(len(self.snapshot()["courseSessions"]), 1)
+        self.assertEqual(len(self.snapshot()["appointments"]), 1)
+        self.assertEqual(self.snapshot()["members"][0]["balance"], 10)
+        self.goto("dashboard")
+        expect(self.page.get_by_text("今日课程", exact=True)).to_be_visible()
+        expect(self.page.get_by_role("link", name="查看排课", exact=True)).to_be_visible()
+
     def test_member_add_duplicate_and_reload(self):
         self.open("members")
         self.page.get_by_role("button", name="新增会员", exact=True).click()

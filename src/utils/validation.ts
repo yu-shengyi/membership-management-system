@@ -1,5 +1,6 @@
 import type { AppData, Backup } from "../types/index.ts";
 import { validDate } from "./dates.ts";
+import { validateCourseData } from "./courseValidation.ts";
 function check(ok: unknown, label: string): asserts ok {
   if (!ok) throw new Error("数据校验失败：" + label);
 }
@@ -137,15 +138,27 @@ export function validateData(value: unknown): asserts value is AppData {
         "预约教练或备注不合法",
       );
   }
+  validateCourseData(d);
 }
 export function parseBackup(text: string): Backup {
   const b = JSON.parse(text);
-  check(b && ["2.0.0", "2.1.0"].includes(b.version), "不支持的备份版本");
+  check(
+    b && ["2.0.0", "2.1.0", "2.2.0"].includes(b.version),
+    "不支持的备份版本",
+  );
   check(timestamp(b.timestamp), "备份时间不合法");
+  if (b.version !== "2.2.0" && b.data && typeof b.data === "object") {
+    b.data = {
+      ...b.data,
+      courses: b.data.courses === undefined ? [] : b.data.courses,
+      courseSessions:
+        b.data.courseSessions === undefined ? [] : b.data.courseSessions,
+    };
+  }
   validateData(b.data);
   return {
     ...b,
     id: typeof b.id === "string" && b.id ? b.id : "legacy-" + b.timestamp,
-    version: "2.1.0",
+    version: "2.2.0",
   };
 }

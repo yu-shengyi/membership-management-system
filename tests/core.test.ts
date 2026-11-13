@@ -81,6 +81,8 @@ const data = (): AppData => ({
   members: [{ ...member }],
   transactions: [],
   appointments: [],
+  courses: [],
+  courseSessions: [],
 });
 const consume = {
   memberId: "m1",

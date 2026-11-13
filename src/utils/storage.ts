@@ -19,11 +19,13 @@ const empty = (): AppData => ({
   members: [],
   transactions: [],
   appointments: [],
+  courses: [],
+  courseSessions: [],
 });
 function snapshot(data: AppData): Backup {
   return {
     id: createId(),
-    version: "2.1.0",
+    version: "2.2.0",
     timestamp: new Date().toISOString(),
     data,
   };
@@ -65,6 +67,8 @@ export const storage = {
           members: JSON.parse(localStorage.getItem(legacy[0]) || "[]"),
           transactions: JSON.parse(localStorage.getItem(legacy[1]) || "[]"),
           appointments: JSON.parse(localStorage.getItem(legacy[2]) || "[]"),
+          courses: [],
+          courseSessions: [],
         };
         validateData(old);
         previous = JSON.stringify(snapshot(old));

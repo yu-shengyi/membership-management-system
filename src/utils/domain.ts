@@ -134,6 +134,7 @@ export function updateMember(
 export function removeDemo(data: AppData): AppData {
   const ids = new Set(data.members.filter((m) => m.isDemo).map((m) => m.id));
   return {
+    ...data,
     members: data.members.filter((m) => !ids.has(m.id)),
     transactions: data.transactions.filter((t) => !ids.has(t.memberId)),
     appointments: data.appointments.filter((a) => !ids.has(a.memberId)),

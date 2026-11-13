@@ -25,6 +25,8 @@ export const useAppStore = create<Store>((set) => {
     members: [],
     transactions: [],
     appointments: [],
+    courses: [],
+    courseSessions: [],
     error: null,
     warning: null,
     load: () => {
